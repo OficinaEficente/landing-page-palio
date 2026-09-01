@@ -23,6 +23,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Build static Open Graph image
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL -r 13235-193826 https://raw.githubusercontent.com/OficinaEficente/site_palio/main/index.html \
+            | tr -d '\r\n' \
+            | base64 --decode > public/og-palio.jpg
+          test -s public/og-palio.jpg
+          file public/og-palio.jpg
+
       - name: Deploy to Cloudflare Workers
         run: npm run deploy
         env:
