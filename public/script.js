@@ -44,6 +44,7 @@ async function initMeta(){
       s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);
     }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 
+    window.fbq('set','autoConfig',false,pixelId);
     window.fbq('init',pixelId);
     trackMeta('PageView');
     trackMeta('ViewContent',{content_name:CONTENT_NAME,value:VALUE,currency:CURRENCY});
