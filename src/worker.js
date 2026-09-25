@@ -171,7 +171,7 @@ async function handleRioOneEvent(request, env) {
 
     if (!eventName || !eventId) return json({ error: "invalid_event" }, 400);
     if (consentMeta === false) {
-      return json({ ok: true, skipped: true, reason: "meta_consent_missing", event_id: eventId });
+      return json({ delivered: true, skipped: true, reason: "meta_consent_missing", event_id: eventId });
     }
 
     const contact = body?.contact || {};
@@ -233,7 +233,7 @@ async function handleRioOneEvent(request, env) {
       : {
           content_name: DEFAULT_CONTENT_NAME,
           ...(body?.form_key ? { form_key: String(body.form_key) } : {}),
-          ...(body?.source ? { source: String(body.source) } : {})
+          ...(body?.source || body?.source_site ? { source: String(body.source || body.source_site) } : {})
         };
 
     if (eventName === "Purchase" && (!Number.isFinite(customData.value) || customData.value < 0)) {
@@ -261,10 +261,10 @@ async function handleRioOneEvent(request, env) {
     }));
 
     if (!response.ok) {
-      return json({ ok: false, event_name: eventName, event_id: eventId, meta_status: response.status, meta: result }, 502);
+      return json({ delivered: false, event_name: eventName, event_id: eventId, meta_status: response.status, meta: result }, 502);
     }
 
-    return json({ ok: true, event_name: eventName, event_id: eventId, meta_status: response.status, meta: result });
+    return json({ delivered: true, event_name: eventName, event_id: eventId, meta_status: response.status });
   } catch (error) {
     console.error("Rio One CAPI error", error instanceof Error ? error.message : "unknown");
     return json({ error: "internal_error" }, 500);
