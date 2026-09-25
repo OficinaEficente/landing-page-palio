@@ -52,14 +52,75 @@ async function initMeta(){
   }
 }
 
+function initRioOneModal(){
+  const formHost=document.querySelector('.rio-one-form');
+  if(!formHost)return null;
+
+  const style=document.createElement('style');
+  style.textContent=`
+    .rio-modal{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.76);backdrop-filter:blur(6px)}
+    .rio-modal.is-open{display:flex}
+    .rio-modal__panel{position:relative;width:min(100%,620px);max-height:min(90vh,850px);overflow:auto;border:1px solid #4a4322;border-radius:20px;background:#0d1114;box-shadow:0 30px 100px #000;padding:30px 26px}
+    .rio-modal__close{position:absolute;top:12px;right:12px;width:38px;height:38px;border:1px solid #39424a;border-radius:999px;background:#171d23;color:#fff;font-size:24px;line-height:1;cursor:pointer}
+    .rio-modal__eyebrow{display:block;padding-right:48px;color:#ffc400;font-size:.75rem;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+    .rio-modal__title{margin:8px 0 8px;font-size:clamp(1.65rem,5vw,2.35rem);line-height:1.03;letter-spacing:-.04em}
+    .rio-modal__text{margin:0 0 20px;color:#a7b0b8}
+    .rio-modal .rio-one-form{display:block;width:100%;min-height:120px}
+    body.rio-modal-open{overflow:hidden}
+    @media(max-width:560px){.rio-modal{padding:10px}.rio-modal__panel{padding:26px 16px 20px;border-radius:16px}}
+  `;
+  document.head.appendChild(style);
+
+  const modal=document.createElement('div');
+  modal.className='rio-modal';
+  modal.setAttribute('aria-hidden','true');
+  modal.innerHTML=`
+    <div class="rio-modal__panel" role="dialog" aria-modal="true" aria-labelledby="rio-modal-title">
+      <button class="rio-modal__close" type="button" aria-label="Fechar formulário">×</button>
+      <span class="rio-modal__eyebrow">Antes de ir para o pagamento</span>
+      <h2 class="rio-modal__title" id="rio-modal-title">Preencha seus dados para continuar</h2>
+      <p class="rio-modal__text">É rápido. Depois do cadastro, você continua para o checkout do treinamento.</p>
+      <div class="rio-modal__form-slot"></div>
+    </div>
+  `;
+  modal.querySelector('.rio-modal__form-slot').appendChild(formHost);
+  document.body.appendChild(modal);
+
+  const close=()=>{
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('rio-modal-open');
+  };
+  const open=()=>{
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('rio-modal-open');
+    setTimeout(()=>modal.querySelector('input,button,select,textarea')?.focus(),120);
+  };
+
+  modal.querySelector('.rio-modal__close').addEventListener('click',close);
+  modal.addEventListener('click',event=>{if(event.target===modal)close();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close();});
+
+  return {open,close};
+}
+
+const rioOneModal=initRioOneModal();
 const checkoutButtons=document.querySelectorAll('[data-checkout]');
 checkoutButtons.forEach(button=>{
-  button.addEventListener('click',()=>{
+  button.addEventListener('click',event=>{
+    event.preventDefault();
     const label=button.dataset.label||'checkout';
     if(typeof gtag==='function'){
       gtag('event','click_checkout',{event_category:'cta',event_label:label});
     }
     trackMeta('InitiateCheckout',{content_name:CONTENT_NAME,value:VALUE,currency:CURRENCY,cta_label:label});
+    if(rioOneModal){
+      rioOneModal.open();
+      return;
+    }
+    const href=button.getAttribute('href');
+    if(href)location.href=href;
   });
 });
 
