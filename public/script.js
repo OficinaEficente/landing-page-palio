@@ -1,5 +1,5 @@
 const CONTENT_NAME='Curso Reparo Caixa Direcao Palio';
-const VALUE=79;
+const VALUE=89;
 const CURRENCY='BRL';
 
 function eventId(){
